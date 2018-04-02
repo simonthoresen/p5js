@@ -2,13 +2,13 @@
 var CANVAS_WIDTH = 800;
 var CANVAS_HEIGHT = 600;
 var BACKGROUND_WIDTH = 1000;
-var HERO_WIDTH = 181;
-var HERO_HEIGHT = 229;
+var HERO_WIDTH = 32;
+var HERO_HEIGHT = 32;
 var HERO_X_SPEED = 5;
 var HERO_Y_ACCELERATION = 1;
 var HERO_JUMP_SPEED = 20;
 var HERO_NUM_FRAMES_PER_ROW = 5;
-var HERO_NUM_FRAMES = 7;
+var HERO_NUM_FRAMES = 5;
 var HERO_ANIM_SPEED = 3;
 var HERO_MAX_HEALTH = 100; 
 var GROUND_Y = 540;
@@ -43,7 +43,7 @@ var heroYSpeed = 0;
 var heroIsInTheAir = false;
 var heroHealth = HERO_MAX_HEALTH;
 var heroImage = new Image();
-heroImage.src = "assets/animatedNanonaut.png";
+heroImage.src = "assets/ninja.png";
 var heroSpriteSheet = {
     numFramesPerRow: 5,
     spriteWidth: HERO_WIDTH,
