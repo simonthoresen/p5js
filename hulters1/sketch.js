@@ -15,7 +15,7 @@ var GROUND_Y = 540;
 var KEYCODE_SPACE = 32;
 var ROBOT_WIDTH = 141;
 var ROBOT_HEIGHT = 139;
-var ROBOT_NUM_FRAMES = 9;
+var ROBOT_NUM_FRAMES = 1;//9;
 var ROBOT_ANIM_SPEED = 5;
 var ROBOT_X_SPEED = 4;
 var ROBOT_DISTANCE_MIN = 400;
@@ -58,9 +58,9 @@ var heroHB = {
 };
 
 var robotImage = new Image();
-robotImage.src = "assets/animatedRobot.png";
+robotImage.src = "assets/monster.png";//animatedRobot.png";
 var robotSpriteSheet = {
-    numFramesPerRow: 3,
+    numFramesPerRow: 1,//3,
     spriteWidth: ROBOT_WIDTH,
     spriteHeight: ROBOT_HEIGHT,
     image: robotImage  
@@ -285,13 +285,13 @@ function draw() {
         drawCtx.drawImage(bushData[i].image, bushData[i].x - shakenCameraX, GROUND_Y - bushData[i].y - shakenCameraY);
     }
 
+    // draw the hero
+    drawAnimSprite(heroX - shakenCameraX, heroY - shakenCameraY, heroFrameIdx, heroSpriteSheet);
+
     // draw the robots
     for (var i = 0; i < robotData.length; ++i) {
         drawAnimSprite(robotData[i].x - shakenCameraX, robotData[i].y - shakenCameraY, robotData[i].frameIdx, robotSpriteSheet);
     }
-
-    // draw the hero
-    drawAnimSprite(heroX - shakenCameraX, heroY - shakenCameraY, heroFrameIdx, heroSpriteSheet);
 
     // draw the current run distance
     drawCtx.fillStyle = "black";
