@@ -2,8 +2,8 @@
 var CANVAS_WIDTH = 800;
 var CANVAS_HEIGHT = 600;
 var BACKGROUND_WIDTH = 1000;
-var HERO_WIDTH = 32;
-var HERO_HEIGHT = 32;
+var HERO_WIDTH = 181;
+var HERO_HEIGHT = 229;
 var HERO_X_SPEED = 5;
 var HERO_Y_ACCELERATION = 1;
 var HERO_JUMP_SPEED = 20;
@@ -33,8 +33,6 @@ var screenshake = false;
 var cameraX = 0;
 var cameraY = 0;
 var frameCnt = 0;
-
-var spaceKeyIsPressed = false;
 
 var heroFrameIdx = 0;
 var heroX = CANVAS_WIDTH / 2;
@@ -70,7 +68,7 @@ var robotHB = {
 var bgImage;
 var bush1Image;
 var bush2Image;
-var bushData = generateBushes();
+var bushData;
 
 function preload() {
     bgImage = loadImage("assets/background.png");
@@ -82,12 +80,12 @@ function preload() {
 
 function setup() {
     createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-
+    bushData = generateBushes();
 }
 
 function draw() {
     update();
-    draw();
+    doDraw();
 }
 
 function generateBushes() {
@@ -108,20 +106,6 @@ function generateBushes() {
         bushX += 150 + Math.random() * 200;
     }
     return ret;
-}
-
-
-// PLAYER INPUT
-function onKeyDown(event) {
-    if (event.keyCode == KEYCODE_SPACE) {
-        spaceKeyIsPressed = true;
-    }
-}
-
-function onKeyUp(event) {
-    if (event.keyCode == KEYCODE_SPACE) {
-        spaceKeyIsPressed = false;
-    }
 }
 
 // UPDATING
@@ -153,7 +137,7 @@ function update() {
 
     // update hero
     heroX = heroX + HERO_X_SPEED;
-    if (spaceKeyIsPressed && !heroIsInTheAir) {
+    if (keyIsDown(KEYCODE_SPACE) && !heroIsInTheAir) {
         heroYSpeed = -HERO_JUMP_SPEED;
         heroIsInTheAir = true;
     }
@@ -244,7 +228,7 @@ function isAxisColliding(heroLeft, heroRight, robotLeft, robotRight) {
 }
 
 // DRAWING
-function draw() {
+function doDraw() {
     var shakenCameraX = cameraX;
     var shakenCameraY = cameraY;
     if (screenshake) {
@@ -306,6 +290,6 @@ function drawAnimSprite(screenX, screenY, frameIdx, spriteSheet) {
     var spriteX = col * spriteSheet.spriteWidth;
     var spriteY = row * spriteSheet.spriteHeight;
     image(spriteSheet.image,
-          spriteX, spriteY, spriteSheet.spriteWidth, spriteSheet.spriteHeight,
-          screenX, screenY, spriteSheet.spriteWidth, spriteSheet.spriteHeight);
+        screenX, screenY, spriteSheet.spriteWidth, spriteSheet.spriteHeight,
+        spriteX, spriteY, spriteSheet.spriteWidth, spriteSheet.spriteHeight);
 }
