@@ -9,7 +9,8 @@ var HERO_Y_ACCELERATION = 1;
 var HERO_JUMP_SPEED = 20;
 var HERO_NUM_FRAMES_PER_ROW = 5;
 var HERO_NUM_FRAMES = 7;
-var HERO_ANIM_SPEED = 3; 
+var HERO_ANIM_SPEED = 3;
+var HERO_MAX_HEALTH = 100; 
 var GROUND_Y = 540;
 var KEYCODE_SPACE = 32;
 var ROBOT_WIDTH = 141;
@@ -21,11 +22,14 @@ var ROBOT_DISTANCE_MIN = 400;
 var ROBOT_DISTANCE_MAX = 1200;
 var ROBOT_MAX_COUNT = 3;
 var SCREENSHAKE_RADIUS = 16;
+var MODE_PLAY = 0;
+var MODE_GAME_OVER = 1;
 
 // SETUP
 var drawCtx;
+var gameMode = MODE_PLAY;
 
-var sceenshake = false;
+var screenshake = false;
 var cameraX = 0;
 var cameraY = 0;
 var frameCnt = 0;
@@ -37,6 +41,7 @@ var heroX = CANVAS_WIDTH / 2;
 var heroY = GROUND_Y - HERO_HEIGHT;
 var heroYSpeed = 0;
 var heroIsInTheAir = false;
+var heroHealth = HERO_MAX_HEALTH;
 var heroImage = new Image();
 heroImage.src = "assets/animatedNanonaut.png";
 var heroSpriteSheet = {
@@ -135,6 +140,10 @@ function onKeyUp(event) {
 
 // UPDATING
 function update() {
+    if (gameMode != MODE_PLAY) {
+        return;
+    }
+
     // update bushes
     for (var i = 0; i < bushData.length; ++i) {
         if (bushData[i].x - cameraX < -CANVAS_WIDTH) {
@@ -146,7 +155,14 @@ function update() {
     screenshake = false;
     var collision = updateRobots();
     if (collision) {
-        screenshake = true;
+        if (heroHealth > 0) {
+            heroHealth -= 1;
+            screenshake = true;
+        }
+        if (heroHealth <= 0) {
+            gameMode = MODE_GAME_OVER;
+            screenshake = false;
+        }
     }
 
     // update hero
@@ -276,6 +292,24 @@ function draw() {
 
     // draw the hero
     drawAnimSprite(heroX - shakenCameraX, heroY - shakenCameraY, heroFrameIdx, heroSpriteSheet);
+
+    // draw the current run distance
+    drawCtx.fillStyle = "black";
+    drawCtx.font = "48px sans-serif";
+    drawCtx.fillText((heroX / 100).toFixed(0) + "m", 20, 40);
+
+    // draw the health bar
+    drawCtx.fillStyle = "red";
+    drawCtx.fillRect(400, 10, 380 * heroHealth / HERO_MAX_HEALTH, 20);
+    drawCtx.strokeStyle = "red";
+    drawCtx.strokeRect(400, 10, 380, 20);
+
+    // render game over
+    if (gameMode == MODE_GAME_OVER) {
+        drawCtx.fillStyle = "black";
+        drawCtx.font = "96px sans-serif";
+        drawCtx.fillText("GAME OVER", 120, 300);
+    }
 }
 
 function drawAnimSprite(screenX, screenY, frameIdx, spriteSheet) {
