@@ -12,10 +12,20 @@ var HERO_NUM_FRAMES = 7;
 var HERO_ANIM_SPEED = 3; 
 var GROUND_Y = 540;
 var KEYCODE_SPACE = 32;
+var ROBOT_WIDTH = 141;
+var ROBOT_HEIGHT = 139;
+var ROBOT_NUM_FRAMES = 9;
+var ROBOT_ANIM_SPEED = 5;
+var ROBOT_X_SPEED = 4;
+var ROBOT_DISTANCE_MIN = 400;
+var ROBOT_DISTANCE_MAX = 1200;
+var ROBOT_MAX_COUNT = 3;
+var SCREENSHAKE_RADIUS = 16;
 
 // SETUP
 var drawCtx;
 
+var sceenshake = false;
 var cameraX = 0;
 var cameraY = 0;
 var frameCnt = 0;
@@ -29,6 +39,34 @@ var heroYSpeed = 0;
 var heroIsInTheAir = false;
 var heroImage = new Image();
 heroImage.src = "assets/animatedNanonaut.png";
+var heroSpriteSheet = {
+    numFramesPerRow: 5,
+    spriteWidth: HERO_WIDTH,
+    spriteHeight: HERO_HEIGHT,
+    image: heroImage
+};
+var heroHB = {
+    xOffset: 60,
+    yOffset: 20,
+    width: 50,
+    height: 200
+};
+
+var robotImage = new Image();
+robotImage.src = "assets/animatedRobot.png";
+var robotSpriteSheet = {
+    numFramesPerRow: 3,
+    spriteWidth: ROBOT_WIDTH,
+    spriteHeight: ROBOT_HEIGHT,
+    image: robotImage  
+};
+var robotData = [ ];
+var robotHB = {
+    xOffset: 50,
+    yOffset: 20,
+    width: 50,
+    height: 100
+};
 
 var bgImage = new Image();
 bgImage.src = "assets/background.png";
@@ -104,6 +142,13 @@ function update() {
         }
     }
 
+    // update robots
+    screenshake = false;
+    var collision = updateRobots();
+    if (collision) {
+        screenshake = true;
+    }
+
     // update hero
     heroX = heroX + HERO_X_SPEED;
     if (spaceKeyIsPressed && !heroIsInTheAir) {
@@ -120,7 +165,7 @@ function update() {
 
     // update animation
     frameCnt = frameCnt + 1;
-    if (frameCnt % HERO_ANIM_SPEED == 0) {
+    if (frameCnt % HERO_ANIM_SPEED == 0 && !heroIsInTheAir) {
         heroFrameIdx = heroFrameIdx + 1;
         if (heroFrameIdx >= HERO_NUM_FRAMES) {
             heroFrameIdx = 0;
@@ -131,16 +176,89 @@ function update() {
     cameraX = heroX - 150;
 }
 
+function updateRobots() {
+    var collision = false;
+    for (var i = 0; i < robotData.length; ++i) {
+        var robot = robotData[i];
+        if (isRobotColliding(heroX + heroHB.xOffset, heroY + heroHB.yOffset, heroHB.width, heroHB.height,
+                             robot.x + robotHB.xOffset, robot.y + robotHB.yOffset, robotHB.width, robotHB.height)) 
+        {
+            collision = true;
+        }
+        robotData[i].x -= ROBOT_X_SPEED;
+        if (frameCnt % ROBOT_ANIM_SPEED == 0) {
+            robotData[i].frameIdx = robotData[i].frameIdx + 1;
+            if (robotData[i].frameIdx >= ROBOT_NUM_FRAMES) {
+                robotData[i].frameIdx = 0;
+            }
+        }
+    }
+    var robotIdx = 0;
+    while (robotIdx < robotData.length) {
+        if (robotData[robotIdx].x < cameraX - ROBOT_WIDTH) {
+            robotData.splice(robotIdx, 1);
+        } else {
+            robotIdx += 1;
+        }
+    }
+    if (robotData.length < ROBOT_MAX_COUNT) {
+        var lastX = 0;
+        if (robotData.length > 0) {
+            lastX = robotData[robotData.length - 1].x;
+        }
+        if (lastX < heroX + CANVAS_WIDTH) {
+            lastX = heroX + CANVAS_WIDTH;
+        }
+        var newRobotX = lastX + ROBOT_DISTANCE_MIN + Math.random() * (ROBOT_DISTANCE_MAX - ROBOT_DISTANCE_MIN);
+        robotData.push({
+            x: newRobotX,
+            y: GROUND_Y - ROBOT_HEIGHT,
+            frameIdx: 0
+        });
+    }
+    return collision;
+}
+
+function isRobotColliding(heroX, heroY, heroW, heroH, robotX, robotY, robotW, robotH) {
+    if (!isAxisColliding(heroX, heroX + heroW, robotX, robotX + robotW)) {
+        return false;
+    }
+    if (!isAxisColliding(heroY, heroY + heroH, robotY, robotY + robotH)) {
+        return false;
+    }
+    return true;
+}
+
+function isAxisColliding(heroLeft, heroRight, robotLeft, robotRight) {
+    if (heroRight >= robotLeft && heroRight <= robotRight) {
+        return true;
+    }
+    if (heroLeft >= robotLeft && heroLeft <= robotRight) {
+        return true;
+    }
+    if (heroLeft <= robotLeft && heroRight >= robotRight) {
+        return true;
+    }
+    return false;
+}
+
 // DRAWING
 function draw() {
+    var shakenCameraX = cameraX;
+    var shakenCameraY = cameraY;
+    if (screenshake) {
+        shakenCameraX += (Math.random() - 0.5) * SCREENSHAKE_RADIUS;
+        shakenCameraY += (Math.random() - 0.5) * SCREENSHAKE_RADIUS;
+    }
+
     // draw the sky
     drawCtx.fillStyle = "LightSkyBlue";
     drawCtx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y - 40);
 
     // draw the background
-    var backgroudX = -(cameraX % BACKGROUND_WIDTH);
-    drawCtx.drawImage(bgImage, backgroudX, -210);
-    drawCtx.drawImage(bgImage, backgroudX + BACKGROUND_WIDTH, -210);
+    var backgroundX = -(shakenCameraX % BACKGROUND_WIDTH);
+    drawCtx.drawImage(bgImage, backgroundX, -210);
+    drawCtx.drawImage(bgImage, backgroundX + BACKGROUND_WIDTH, -210);
 
     // draw the ground
     drawCtx.fillStyle = "ForestGreen";
@@ -148,14 +266,24 @@ function draw() {
 
     // draw the bushes
     for (var i = 0; i < bushData.length; ++i) {
-        drawCtx.drawImage(bushData[i].image, bushData[i].x - cameraX, GROUND_Y - bushData[i].y - cameraY);
+        drawCtx.drawImage(bushData[i].image, bushData[i].x - shakenCameraX, GROUND_Y - bushData[i].y - shakenCameraY);
+    }
+
+    // draw the robots
+    for (var i = 0; i < robotData.length; ++i) {
+        drawAnimSprite(robotData[i].x - shakenCameraX, robotData[i].y - shakenCameraY, robotData[i].frameIdx, robotSpriteSheet);
     }
 
     // draw the hero
-    var row = Math.floor(heroFrameIdx / HERO_NUM_FRAMES_PER_ROW);
-    var col = heroFrameIdx % HERO_NUM_FRAMES_PER_ROW;
-    var spriteX = col * HERO_WIDTH;
-    var spriteY = row * HERO_HEIGHT;
-    drawCtx.drawImage(heroImage, spriteX, spriteY, HERO_WIDTH, HERO_HEIGHT,
-                      heroX - cameraX, heroY - cameraY, HERO_WIDTH, HERO_HEIGHT);
+    drawAnimSprite(heroX - shakenCameraX, heroY - shakenCameraY, heroFrameIdx, heroSpriteSheet);
+}
+
+function drawAnimSprite(screenX, screenY, frameIdx, spriteSheet) {
+    var row = Math.floor(frameIdx / spriteSheet.numFramesPerRow);
+    var col = frameIdx % spriteSheet.numFramesPerRow;
+    var spriteX = col * spriteSheet.spriteWidth;
+    var spriteY = row * spriteSheet.spriteHeight;
+    drawCtx.drawImage(spriteSheet.image, 
+                      spriteX, spriteY, spriteSheet.spriteWidth, spriteSheet.spriteHeight,
+                      screenX, screenY, spriteSheet.spriteWidth, spriteSheet.spriteHeight);
 }
