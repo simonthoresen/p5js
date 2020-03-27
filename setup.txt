@@ -1,0 +1,14 @@
+https://github.com/processing/p5.js/wiki/Local-server#node-http-server
+
+Download https://nodejs.org/en/download/
+
+$ npm install -g http-server
+$ npm install -g browser-sync
+$ cd <project folder>
+$ browser-sync start --server -f -w
+
+Your website should be available at http://localhost:3000 and whenever you save a file in your project, the webpage will automatically reload.
+
+NOTE: If you encountered an error that says EACCES when installing either http-server or browser-
+sync it means npm is not installed with the right permissions, follow the steps outlined at
+https://docs.npmjs.com/getting-started/fixing-npm-permissions 
