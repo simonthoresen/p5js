@@ -5,7 +5,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   img = loadImage("hud.png")
 }
-
+ 
 function draw() {
   // put drawing code here
   fill("LightSkyBlue");
